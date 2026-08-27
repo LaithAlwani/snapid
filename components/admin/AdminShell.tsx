@@ -24,10 +24,10 @@ export function AdminShell() {
       <header className="border-b border-hairline bg-white">
         <div className="mx-auto flex max-w-[1180px] items-center gap-4 px-5 py-3">
           <Image
-            src="/snapid-logo.png"
+            src="/snapid-logo-mark.png"
             alt="SnapID"
-            width={120}
-            height={40}
+            width={140}
+            height={38}
             className="h-[38px] w-auto"
           />
           <span className="rounded-full bg-navy px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white">

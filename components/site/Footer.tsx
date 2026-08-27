@@ -1,7 +1,18 @@
+import Image from "next/image";
+
 export function Footer() {
   return (
     <footer className="border-t border-white/10 bg-deep text-on-navy-muted">
       <div className="mx-auto grid max-w-[1120px] gap-5 px-[18px] py-10">
+        <a href="#top" className="flex w-fit items-center">
+          <Image
+            src="/snapid-logo-light.png"
+            alt="SnapID — Passport &amp; ID Photos"
+            width={197}
+            height={72}
+            className="h-[64px] w-auto sm:h-[72px]"
+          />
+        </a>
         <div className="flex flex-wrap items-center gap-[18px]">
           <a href="#" className="font-semibold text-on-navy">
             Instagram

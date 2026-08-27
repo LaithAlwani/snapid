@@ -34,11 +34,11 @@ export function SignIn() {
       <div className="w-full max-w-[380px]">
         <div className="mb-6 flex justify-center">
           <Image
-            src="/snapid-logo.png"
+            src="/snapid-logo-light.png"
             alt="SnapID"
-            width={150}
-            height={50}
-            className="h-[50px] w-auto brightness-0 invert"
+            width={164}
+            height={60}
+            className="h-[60px] w-auto"
             priority
           />
         </div>

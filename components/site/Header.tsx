@@ -14,12 +14,12 @@ export function Header() {
       <div className="mx-auto flex max-w-[1120px] items-center gap-4 px-[18px] py-2.5">
         <a href="#top" className="flex items-center">
           <Image
-            src="/snapid-logo.png"
-            alt="SnapID — Passport & ID Photos"
-            width={140}
+            src="/snapid-logo-mark.png"
+            alt="SnapID — Passport &amp; ID Photos"
+            width={170}
             height={46}
             priority
-            className="h-[46px] w-auto"
+            className="h-[38px] w-auto sm:h-[46px]"
           />
         </a>
         <nav className="ml-auto hidden items-center gap-[22px] md:flex">
