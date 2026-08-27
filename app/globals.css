@@ -1,26 +1,112 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* SnapID brand palette (from the design) */
+  --color-deep: #0b1526;
+  --color-navy: #10233c;
+  --color-brand: #1d4ed8;
+  --color-brand-bright: #3b82f6;
+
+  --color-ink: #0b1526;
+  --color-heading: #10233c;
+  --color-muted: #59697e;
+
+  --color-sky-100: #f0f5fc;
+  --color-sky-200: #e1eaf8;
+  --color-hairline: #e4eaf3;
+  --color-hairline-strong: #d7e0ec;
+  --color-hairline-soft: #eef2f8;
+  --color-surface: #f5f8fc;
+  --color-surface-2: #fafcfe;
+
+  --color-on-navy: #c3d3e8;
+  --color-on-navy-muted: #8397af;
+  --color-accent-on-navy: #9ec0ff;
+  --color-on-deep: #a9bcd3;
+
+  --font-sans: var(--font-source), system-ui, sans-serif;
+  --font-heading: var(--font-archivo), system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: #ffffff;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  p {
+    text-wrap: pretty;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes snapid-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes snapid-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+.animate-pop {
+  animation: snapid-pop 0.28s ease both;
+}
+.animate-dot {
+  animation: snapid-dot 1.2s infinite;
+}
+
+/* Hide the native scrollbar (used where custom arrows drive scrolling). */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Slim, branded scrollbar for vertical/horizontal scroll regions. */
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #c3cede transparent;
+}
+.custom-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background-color: #c3cede;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #9fb0c9;
 }
