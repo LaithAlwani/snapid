@@ -1,8 +1,23 @@
 // Central SEO/business config. Override the URL per environment with
 // NEXT_PUBLIC_SITE_URL (e.g. the Vercel/production domain).
-export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://snapid.ca"
-).replace(/\/$/, "");
+const FALLBACK_URL = "https://snapid.ca";
+
+// Tolerant of blank values, missing protocol, or trailing slashes so a
+// misconfigured env var can never crash the build (`new URL(...)`).
+function normalizeSiteUrl(raw: string | undefined): string {
+  const trimmed = (raw ?? "").trim();
+  if (!trimmed) return FALLBACK_URL;
+  const withProto = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
+  try {
+    return new URL(withProto).toString().replace(/\/$/, "");
+  } catch {
+    return FALLBACK_URL;
+  }
+}
+
+export const SITE_URL = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
 export const SITE_NAME = "SnapID — Passport & ID Photos";
 export const SITE_TAGLINE = "Passport & ID photos accepted the first time";
