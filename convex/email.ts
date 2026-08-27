@@ -59,7 +59,10 @@ export const sendBookingConfirmation = internalAction({
         ? `SnapID <${process.env.SMTP_USER}>`
         : undefined;
     const from =
-      process.env.SMTP_FROM ?? userAddr ?? "SnapID <hello@snapid.ca>";
+      process.env.MAIL_FROM ??
+      process.env.SMTP_FROM ??
+      userAddr ??
+      "SnapID <hello@snapid.ca>";
     const place = PLACES[b.place];
     const when = `${prettyDate(b.date)} at ${b.slot}`;
     const totalStr =
