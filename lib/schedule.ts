@@ -57,6 +57,21 @@ export function startSlots(
   }));
 }
 
+/** Selectable clock times across the business day, inclusive of both ends. */
+export function gridTimes(): Array<{ minutes: number; label: string }> {
+  const out: Array<{ minutes: number; label: string }> = [];
+  for (let m = DAY_START; m <= DAY_END; m += STEP) {
+    out.push({ minutes: m, label: minutesToLabel(m) });
+  }
+  return out;
+}
+
+/** An all-day block: the whole bookable window. */
+export const FULL_DAY: Interval = {
+  start: DAY_START,
+  duration: DAY_END - DAY_START,
+};
+
 /** Local YYYY-MM-DD key (avoids UTC shifting the day). */
 export function dateKey(d: Date): string {
   const y = d.getFullYear();

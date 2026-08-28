@@ -42,9 +42,29 @@ export function BookingSection() {
     total: string;
   } | null>(null);
 
-  const selectedDate = days[dayIndex];
+  // Days the owner has closed outright, so the picker can grey them out
+  // instead of offering a day with no available times.
+  const closedDays = new Set(
+    useQuery(api.blocks.blockedDays, {
+      from: dateKey(days[0]),
+      to: dateKey(days[days.length - 1]),
+    }) ?? [],
+  );
+  // dayIndex defaults to 0, which the owner may have closed. Resolve the day
+  // during render rather than correcting the state from an effect; closed days
+  // are disabled, so this only ever shifts that default.
+  const firstOpen = days.findIndex((d) => !closedDays.has(dateKey(d)));
+  const activeIndex =
+    closedDays.has(dateKey(days[dayIndex])) && firstOpen >= 0
+      ? firstOpen
+      : dayIndex;
+  const selectedDate = days[activeIndex];
+  // Only true when every day in the window is closed.
+  const selectedClosed = closedDays.has(dateKey(selectedDate));
   const booked =
-    useQuery(api.bookings.bookedIntervals, { date: dateKey(selectedDate) }) ?? [];
+    useQuery(api.bookings.unavailableIntervals, {
+      date: dateKey(selectedDate),
+    }) ?? [];
 
   const t = appointmentTotals(form);
   const people = totalPeople(form.counts);
@@ -202,19 +222,24 @@ export function BookingSection() {
               <HScroll className="pb-2" amount={200}>
                 <div className="flex gap-2">
                   {days.map((d, i) => {
-                    const sel = i === dayIndex;
+                    const sel = i === activeIndex;
+                    const closed = closedDays.has(dateKey(d));
                     return (
                       <button
                         type="button"
                         key={i}
+                        disabled={closed}
+                        title={closed ? "Closed this day" : undefined}
                         onClick={() => {
                           setDayIndex(i);
                           setStartMinutes(null);
                         }}
                         className={`min-h-[66px] w-[62px] flex-none rounded-xl border py-2.5 text-center ${
-                          sel
-                            ? "border-navy bg-navy text-white"
-                            : "border-hairline-strong bg-white text-heading"
+                          closed
+                            ? "cursor-not-allowed border-hairline bg-surface text-muted line-through opacity-60"
+                            : sel
+                              ? "border-navy bg-navy text-white"
+                              : "border-hairline-strong bg-white text-heading"
                         }`}
                       >
                         <div className="text-[11.5px] uppercase tracking-[0.06em] opacity-70">
@@ -235,7 +260,15 @@ export function BookingSection() {
               <div className="mb-3 mt-[22px] font-heading text-[15px] font-bold">
                 3 · Choose a start time
               </div>
-              {people < 1 ? (
+              {selectedClosed ? (
+                <p className="text-sm text-muted">
+                  We&apos;re closed for the next two weeks. Please{" "}
+                  <a href="#contact" className="font-semibold text-brand">
+                    get in touch
+                  </a>{" "}
+                  and we&apos;ll sort out a time.
+                </p>
+              ) : people < 1 ? (
                 <p className="text-sm text-muted">
                   Tell us who&apos;s coming first — times depend on how long the
                   session needs.
@@ -266,7 +299,8 @@ export function BookingSection() {
                   </div>
                   <p className="mt-3 text-sm text-muted">
                     Struck-through times don&apos;t fit a{" "}
-                    {formatDuration(t.minutes)} session or are already booked.
+                    {formatDuration(t.minutes)} session, or aren&apos;t
+                    available.
                     Appointment only — no walk-ins.
                   </p>
                 </>

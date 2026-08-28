@@ -131,4 +131,15 @@ export default defineSchema({
     notes: v.optional(v.string()),
     status: corporateLeadStatusValidator,
   }).index("by_status", ["status"]),
+
+  // Owner-declared unavailability: holidays, lunch breaks, or a day already
+  // spent on a mobile job. Merged into the availability math alongside real
+  // bookings, so nothing can be booked over one.
+  blockedTimes: defineTable({
+    date: v.string(), // ISO date, e.g. "2026-09-14"
+    startMinutes: v.number(), // minutes from midnight
+    durationMinutes: v.number(),
+    allDay: v.boolean(), // true => the whole bookable window; marks the day closed
+    reason: v.optional(v.string()),
+  }).index("by_date", ["date"]),
 });

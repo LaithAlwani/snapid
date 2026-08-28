@@ -16,6 +16,7 @@ import {
   bookingStatusValidator,
 } from "./schema";
 import { requireAdmin } from "./lib/admin";
+import { blockedIntervalsForDate } from "./lib/blocks";
 import {
   appointmentTotals,
   appointmentMinutes,
@@ -97,6 +98,7 @@ async function upsertClient(
   });
 }
 
+/** Everything that makes a slot unavailable on a day: bookings AND blocks. */
 async function intervalsForDate(
   ctx: MutationCtx,
   date: string,
@@ -105,23 +107,27 @@ async function intervalsForDate(
     .query("bookings")
     .withIndex("by_date", (q) => q.eq("date", date))
     .collect();
-  return rows
+  const booked = rows
     .filter((r) => r.status !== "cancelled")
     .map((r) => ({ start: r.startMinutes, duration: r.durationMinutes }));
+  return [...booked, ...(await blockedIntervalsForDate(ctx, date))];
 }
 
-// Public: booked intervals for a day, so the client can compute which start
-// times fit a given appointment length.
-export const bookedIntervals = query({
+// Public: every interval that is unavailable on a day — confirmed bookings
+// plus owner-declared blocked time — so the client can compute which start
+// times fit a given appointment length. Both the booking form and the chat
+// assistant read this, so blocked time applies to both by construction.
+export const unavailableIntervals = query({
   args: { date: v.string() },
   handler: async (ctx, args): Promise<Interval[]> => {
     const rows = await ctx.db
       .query("bookings")
       .withIndex("by_date", (q) => q.eq("date", args.date))
       .collect();
-    return rows
+    const booked = rows
       .filter((r) => r.status !== "cancelled")
       .map((r) => ({ start: r.startMinutes, duration: r.durationMinutes }));
+    return [...booked, ...(await blockedIntervalsForDate(ctx, args.date))];
   },
 });
 
@@ -148,7 +154,7 @@ export const createBooking = mutation({
     const intervals = await intervalsForDate(ctx, args.date);
     if (!isStartAvailable(start, durationMinutes, intervals)) {
       throw new Error(
-        "That time was just taken or doesn't fit the appointment length. Please pick another.",
+        "That time isn't available any more, or doesn't fit the appointment length. Please pick another.",
       );
     }
 

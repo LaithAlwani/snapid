@@ -11,8 +11,15 @@ import { ClientsPanel } from "./ClientsPanel";
 import { MessagesPanel } from "./MessagesPanel";
 import { AnalyticsPanel } from "./AnalyticsPanel";
 import { CorporateLeadsPanel } from "./CorporateLeadsPanel";
+import { SchedulePanel } from "./SchedulePanel";
 
-type Tab = "dashboard" | "bookings" | "clients" | "messages" | "corporate";
+type Tab =
+  | "dashboard"
+  | "bookings"
+  | "schedule"
+  | "clients"
+  | "messages"
+  | "corporate";
 
 export function AdminShell() {
   const { signOut } = useAuthActions();
@@ -82,6 +89,9 @@ export function AdminShell() {
           <TabButton active={tab === "bookings"} onClick={() => setTab("bookings")}>
             Bookings
           </TabButton>
+          <TabButton active={tab === "schedule"} onClick={() => setTab("schedule")}>
+            Schedule
+          </TabButton>
           <TabButton active={tab === "clients"} onClick={() => setTab("clients")}>
             Clients (CRM)
           </TabButton>
@@ -105,6 +115,7 @@ export function AdminShell() {
 
         {tab === "dashboard" && <AnalyticsPanel />}
         {tab === "bookings" && <BookingsPanel />}
+        {tab === "schedule" && <SchedulePanel />}
         {tab === "clients" && <ClientsPanel />}
         {tab === "messages" && <MessagesPanel />}
         {tab === "corporate" && <CorporateLeadsPanel />}

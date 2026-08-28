@@ -102,7 +102,7 @@ export function ChatWidget() {
   const people = totalPeople(draft.counts);
   const selectedDate = days[dayIndex];
   const booked =
-    useQuery(api.bookings.bookedIntervals, {
+    useQuery(api.bookings.unavailableIntervals, {
       date: dateKey(selectedDate),
     }) ?? [];
   const slots = people > 0 ? startSlots(duration, booked) : [];

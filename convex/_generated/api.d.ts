@@ -10,6 +10,7 @@
 
 import type * as admin from "../admin.js";
 import type * as auth from "../auth.js";
+import type * as blocks from "../blocks.js";
 import type * as bookings from "../bookings.js";
 import type * as chat from "../chat.js";
 import type * as clients from "../clients.js";
@@ -18,6 +19,7 @@ import type * as corporate from "../corporate.js";
 import type * as email from "../email.js";
 import type * as http from "../http.js";
 import type * as lib_admin from "../lib/admin.js";
+import type * as lib_blocks from "../lib/blocks.js";
 
 import type {
   ApiFromModules,
@@ -28,6 +30,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   auth: typeof auth;
+  blocks: typeof blocks;
   bookings: typeof bookings;
   chat: typeof chat;
   clients: typeof clients;
@@ -36,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   email: typeof email;
   http: typeof http;
   "lib/admin": typeof lib_admin;
+  "lib/blocks": typeof lib_blocks;
 }>;
 
 /**
