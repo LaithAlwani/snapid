@@ -5,6 +5,7 @@ import { HowItWorks } from "@/components/site/HowItWorks";
 import { Pricing } from "@/components/site/Pricing";
 import { Babies } from "@/components/site/Babies";
 import { MobileService } from "@/components/site/MobileService";
+import { Corporate } from "@/components/site/Corporate";
 import { Reviews } from "@/components/site/Reviews";
 import { Faq } from "@/components/site/Faq";
 import { BookingSection } from "@/components/site/BookingSection";
@@ -23,6 +24,7 @@ export default function Home() {
         <Pricing />
         <Babies />
         <MobileService />
+        <Corporate />
         <Reviews />
         <Faq />
         <BookingSection />

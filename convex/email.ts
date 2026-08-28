@@ -25,6 +25,58 @@ function prettyDate(iso: string): string {
   return `${DOW[date.getDay()]}, ${MON[m - 1]} ${d}, ${y}`;
 }
 
+/**
+ * Shared SMTP transport. Returns null (after a warning) when SMTP is not
+ * configured, so every sender degrades to a no-op instead of throwing.
+ */
+function mailer(): {
+  transport: nodemailer.Transporter;
+  from: string;
+} | null {
+  const host = process.env.SMTP_HOST;
+  if (!host) {
+    console.warn(
+      "SMTP_HOST not set — skipping SnapID email. Configure SMTP_* env vars to enable.",
+    );
+    return null;
+  }
+
+  const port = Number(process.env.SMTP_PORT ?? 587);
+  const transport = nodemailer.createTransport({
+    host,
+    port,
+    secure: process.env.SMTP_SECURE === "true" || port === 465,
+    auth: process.env.SMTP_USER
+      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      : undefined,
+  });
+
+  // Many SMTP hosts reject a From that isn't the authenticated mailbox
+  // ("553 Sender is not allowed to relay"). Prefer an explicit SMTP_FROM,
+  // otherwise send from the SMTP_USER address with a friendly display name.
+  const userAddr =
+    process.env.SMTP_USER && process.env.SMTP_USER.includes("@")
+      ? `SnapID <${process.env.SMTP_USER}>`
+      : undefined;
+  const from =
+    process.env.MAIL_FROM ??
+    process.env.SMTP_FROM ??
+    userAddr ??
+    "SnapID <hello@snapid.ca>";
+
+  return { transport, from };
+}
+
+/**
+ * Where owner notifications go. Falls back to the first ADMIN_EMAILS entry,
+ * which is already configured for requireAdmin, so this needs no new setup.
+ */
+function ownerAddress(): string | null {
+  const explicit = process.env.OWNER_EMAIL?.trim();
+  if (explicit) return explicit;
+  return (process.env.ADMIN_EMAILS ?? "").split(",")[0]?.trim() || null;
+}
+
 export const sendBookingConfirmation = internalAction({
   args: { bookingId: v.id("bookings") },
   handler: async (ctx, args) => {
@@ -33,36 +85,10 @@ export const sendBookingConfirmation = internalAction({
     });
     if (!b) return null;
 
-    const host = process.env.SMTP_HOST;
-    if (!host) {
-      console.warn(
-        "SMTP_HOST not set — skipping SnapID confirmation email. Configure SMTP_* env vars to enable.",
-      );
-      return null;
-    }
+    const mail = mailer();
+    if (!mail) return null;
+    const { transport, from } = mail;
 
-    const port = Number(process.env.SMTP_PORT ?? 587);
-    const transport = nodemailer.createTransport({
-      host,
-      port,
-      secure: process.env.SMTP_SECURE === "true" || port === 465,
-      auth: process.env.SMTP_USER
-        ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-        : undefined,
-    });
-
-    // Many SMTP hosts reject a From that isn't the authenticated mailbox
-    // ("553 Sender is not allowed to relay"). Prefer an explicit SMTP_FROM,
-    // otherwise send from the SMTP_USER address with a friendly display name.
-    const userAddr =
-      process.env.SMTP_USER && process.env.SMTP_USER.includes("@")
-        ? `SnapID <${process.env.SMTP_USER}>`
-        : undefined;
-    const from =
-      process.env.MAIL_FROM ??
-      process.env.SMTP_FROM ??
-      userAddr ??
-      "SnapID <hello@snapid.ca>";
     const place = PLACES[b.place];
     const when = `${prettyDate(b.date)} at ${b.slot}`;
     const totalStr =
@@ -132,3 +158,98 @@ function row(label: string, value: string): string {
     <td style="padding:6px 0 6px 16px;font-weight:600;color:#10233C">${value}</td>
   </tr>`;
 }
+
+const SERVICE_LABELS: Record<string, string> = {
+  headshots: "Employee headshots",
+  passportDay: "Passport photo day",
+  both: "Headshots + passport photo day",
+};
+
+/** Lead fields are visitor-supplied, so escape before interpolating into HTML. */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Alerts the owner the moment a corporate quote request lands. The admin panel
+ * is pull-only, so without this a high-value lead can sit unseen for days.
+ */
+export const sendCorporateLeadAlert = internalAction({
+  args: { leadId: v.id("corporateLeads") },
+  handler: async (ctx, args) => {
+    const l = await ctx.runQuery(internal.corporate.getLeadForEmail, {
+      id: args.leadId,
+    });
+    if (!l) return null;
+
+    const mail = mailer();
+    if (!mail) return null;
+
+    const to = ownerAddress();
+    if (!to) {
+      console.warn(
+        "Neither OWNER_EMAIL nor ADMIN_EMAILS is set — skipping corporate lead alert.",
+      );
+      return null;
+    }
+
+    const service = SERVICE_LABELS[l.service] ?? l.service;
+    const contactLine = `${l.contactName} — ${l.email}${l.phone ? ` · ${l.phone}` : ""}`;
+
+    const lines = [
+      `New corporate quote request from ${l.company}.`,
+      "",
+      `Company:    ${l.company}`,
+      `Contact:    ${l.contactName}`,
+      `Email:      ${l.email}`,
+      `Phone:      ${l.phone ?? "—"}`,
+      `Employees:  ${l.employees}`,
+      `Service:    ${service}`,
+      `Location:   ${l.location}`,
+      `Window:     ${l.timing ?? "—"}`,
+      `Notes:      ${l.notes ?? "—"}`,
+      "",
+      "Reply to this email to answer them directly, or open the Corporate tab",
+      "in the SnapID admin to track the quote.",
+    ];
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#0B1526">
+        <div style="background:#10233C;color:#fff;padding:20px 24px;border-radius:12px 12px 0 0">
+          <div style="font-size:20px;font-weight:800">New corporate quote request</div>
+          <div style="color:#9EC0FF;font-size:14px;margin-top:4px">${esc(l.company)} — ${l.employees} employees</div>
+        </div>
+        <div style="border:1px solid #E4EAF3;border-top:0;border-radius:0 0 12px 12px;padding:24px">
+          <table style="width:100%;border-collapse:collapse;font-size:15px">
+            ${row("Contact", esc(contactLine))}
+            ${row("Employees", String(l.employees))}
+            ${row("Service", esc(service))}
+            ${row("Location", esc(l.location))}
+            ${l.timing ? row("Window", esc(l.timing)) : ""}
+            ${l.notes ? row("Notes", esc(l.notes)) : ""}
+          </table>
+          <p style="margin:16px 0 0;color:#59697E;font-size:14px;line-height:1.5">
+            Reply to this email to answer them directly, or open the Corporate tab in the SnapID admin to track the quote.
+          </p>
+        </div>
+      </div>`;
+
+    try {
+      await mail.transport.sendMail({
+        from: mail.from,
+        to,
+        replyTo: l.email,
+        subject: `Corporate quote request — ${l.company} (${l.employees} employees)`,
+        text: lines.join("\n"),
+        html,
+      });
+    } catch (err) {
+      console.error("Failed to send SnapID corporate lead alert", err);
+    }
+    return null;
+  },
+});

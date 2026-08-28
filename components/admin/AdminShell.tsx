@@ -10,14 +10,16 @@ import { BookingsPanel } from "./BookingsPanel";
 import { ClientsPanel } from "./ClientsPanel";
 import { MessagesPanel } from "./MessagesPanel";
 import { AnalyticsPanel } from "./AnalyticsPanel";
+import { CorporateLeadsPanel } from "./CorporateLeadsPanel";
 
-type Tab = "dashboard" | "bookings" | "clients" | "messages";
+type Tab = "dashboard" | "bookings" | "clients" | "messages" | "corporate";
 
 export function AdminShell() {
   const { signOut } = useAuthActions();
   const [tab, setTab] = useState<Tab>("dashboard");
   const stats = useQuery(api.bookings.stats);
   const newMessages = useQuery(api.contact.newMessageCount) ?? 0;
+  const newLeads = useQuery(api.corporate.newLeadCount) ?? 0;
 
   return (
     <div className="min-h-screen bg-surface">
@@ -91,12 +93,21 @@ export function AdminShell() {
               </span>
             )}
           </TabButton>
+          <TabButton active={tab === "corporate"} onClick={() => setTab("corporate")}>
+            Corporate
+            {newLeads > 0 && (
+              <span className="ml-2 rounded-full bg-brand px-1.5 py-0.5 text-[11px] font-bold text-white">
+                {newLeads}
+              </span>
+            )}
+          </TabButton>
         </div>
 
         {tab === "dashboard" && <AnalyticsPanel />}
         {tab === "bookings" && <BookingsPanel />}
         {tab === "clients" && <ClientsPanel />}
         {tab === "messages" && <MessagesPanel />}
+        {tab === "corporate" && <CorporateLeadsPanel />}
       </main>
     </div>
   );

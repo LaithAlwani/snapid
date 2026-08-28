@@ -4,8 +4,9 @@ const NAV = [
   { href: "#how", label: "How it works" },
   { href: "#pricing", label: "Pricing" },
   { href: "#babies", label: "Babies" },
-  { href: "#mobile", label: "Mobile service" },
+  { href: "#mobile", label: "Mobile" },
   { href: "#faq", label: "FAQ" },
+  { href: "#corporate", label: "Corporate" },
 ];
 
 export function Header() {
@@ -22,12 +23,12 @@ export function Header() {
             className="h-[38px] w-auto sm:h-[46px]"
           />
         </a>
-        <nav className="ml-auto hidden items-center gap-[22px] md:flex">
+        <nav className="ml-auto hidden items-center gap-3 md:flex lg:gap-[22px]">
           {NAV.map((n) => (
             <a
               key={n.href}
               href={n.href}
-              className="text-[15px] font-medium text-heading hover:text-brand"
+              className="text-[14px] font-medium text-heading hover:text-brand lg:text-[15px]"
             >
               {n.label}
             </a>

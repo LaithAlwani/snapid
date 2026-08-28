@@ -33,6 +33,17 @@ export const bookingStatusValidator = v.union(
   v.literal("completed"),
   v.literal("cancelled"),
 );
+export const corporateServiceValidator = v.union(
+  v.literal("headshots"),
+  v.literal("passportDay"),
+  v.literal("both"),
+);
+export const corporateLeadStatusValidator = v.union(
+  v.literal("new"),
+  v.literal("quoted"),
+  v.literal("won"),
+  v.literal("lost"),
+);
 export const countsValidator = v.object({
   adult: v.number(),
   child: v.number(),
@@ -102,5 +113,22 @@ export default defineSchema({
       v.literal("read"),
       v.literal("replied"),
     ),
+  }).index("by_status", ["status"]),
+
+  // Corporate quote requests (on-site headshots / staff passport day). Lead
+  // only — no slot, no price, no estimate: the owner replies with a quote.
+  // Deliberately not contactMessages (free text, wrong lifecycle) and not
+  // clients (one row per person-email, with booking-derived revenue counters).
+  corporateLeads: defineTable({
+    company: v.string(),
+    contactName: v.string(),
+    email: v.string(),
+    phone: v.optional(v.string()),
+    employees: v.number(), // approximate head count, 1-5000
+    service: corporateServiceValidator,
+    location: v.string(), // office location, drives the travel component
+    timing: v.optional(v.string()), // free text, e.g. "week of Nov 10"
+    notes: v.optional(v.string()),
+    status: corporateLeadStatusValidator,
   }).index("by_status", ["status"]),
 });

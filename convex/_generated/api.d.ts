@@ -14,6 +14,7 @@ import type * as bookings from "../bookings.js";
 import type * as chat from "../chat.js";
 import type * as clients from "../clients.js";
 import type * as contact from "../contact.js";
+import type * as corporate from "../corporate.js";
 import type * as email from "../email.js";
 import type * as http from "../http.js";
 import type * as lib_admin from "../lib/admin.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   clients: typeof clients;
   contact: typeof contact;
+  corporate: typeof corporate;
   email: typeof email;
   http: typeof http;
   "lib/admin": typeof lib_admin;

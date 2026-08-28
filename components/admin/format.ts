@@ -45,3 +45,9 @@ export const DELIVERABLE_LABEL: Record<string, string> = {
   digital: "Digital",
   both: "Print+Digital",
 };
+
+export const CORPORATE_SERVICE_LABEL: Record<string, string> = {
+  headshots: "Employee headshots",
+  passportDay: "Passport photo day",
+  both: "Headshots + passport day",
+};
